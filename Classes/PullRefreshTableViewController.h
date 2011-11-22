@@ -40,6 +40,8 @@
     NSString *textPull;
     NSString *textRelease;
     NSString *textLoading;
+    BOOL hasLoadedDefaultInsets;
+    UIEdgeInsets defaultInsets;
 }
 
 @property (nonatomic, retain) UIView *refreshHeaderView;

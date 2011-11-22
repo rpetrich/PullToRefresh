@@ -72,6 +72,15 @@
   textLoading = [[NSString alloc] initWithString:@"Loading..."];
 }
 
+- (UIEdgeInsets)defaultInsets
+{
+    if (!hasLoadedDefaultInsets) {
+        hasLoadedDefaultInsets = YES;
+        defaultInsets = self.tableView.contentInset;
+    }
+    return defaultInsets;
+}
+
 - (void)addPullToRefreshHeader {
     refreshHeaderView = [[UIView alloc] initWithFrame:CGRectMake(0, 0 - REFRESH_HEADER_HEIGHT, 320, REFRESH_HEADER_HEIGHT)];
     refreshHeaderView.backgroundColor = [UIColor clearColor];
@@ -105,13 +114,16 @@
     if (isLoading) {
         // Update the content inset, good for section headers
         if (scrollView.contentOffset.y > 0)
-            self.tableView.contentInset = UIEdgeInsetsZero;
-        else if (scrollView.contentOffset.y >= -REFRESH_HEADER_HEIGHT)
-            self.tableView.contentInset = UIEdgeInsetsMake(-scrollView.contentOffset.y, 0, 0, 0);
+            self.tableView.contentInset = [self defaultInsets];
+        else if (scrollView.contentOffset.y >= [self defaultInsets].top - REFRESH_HEADER_HEIGHT) {
+            UIEdgeInsets insets = [self defaultInsets];
+            insets.top -= scrollView.contentOffset.y;
+            self.tableView.contentInset = defaultInsets;
+        }
     } else if (isDragging && scrollView.contentOffset.y < 0) {
         // Update the arrow direction and label
         [UIView beginAnimations:nil context:NULL];
-        if (scrollView.contentOffset.y < -REFRESH_HEADER_HEIGHT) {
+        if (scrollView.contentOffset.y < [self defaultInsets].top - REFRESH_HEADER_HEIGHT) {
             // User is scrolling above the header
             refreshLabel.text = self.textRelease;
             [refreshArrow layer].transform = CATransform3DMakeRotation(M_PI, 0, 0, 1);
@@ -126,7 +138,7 @@
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
     if (isLoading) return;
     isDragging = NO;
-    if (scrollView.contentOffset.y <= -REFRESH_HEADER_HEIGHT) {
+    if (scrollView.contentOffset.y <= [self defaultInsets].top - REFRESH_HEADER_HEIGHT) {
         // Released above the header
         [self startLoading];
     }
@@ -138,7 +150,9 @@
     // Show the header
     [UIView beginAnimations:nil context:NULL];
     [UIView setAnimationDuration:0.3];
-    self.tableView.contentInset = UIEdgeInsetsMake(REFRESH_HEADER_HEIGHT, 0, 0, 0);
+    UIEdgeInsets insets = [self defaultInsets];
+    insets.top += REFRESH_HEADER_HEIGHT;
+    self.tableView.contentInset = insets;
     refreshLabel.text = self.textLoading;
     refreshArrow.hidden = YES;
     [refreshSpinner startAnimating];
@@ -156,7 +170,7 @@
     [UIView setAnimationDelegate:self];
     [UIView setAnimationDuration:0.3];
     [UIView setAnimationDidStopSelector:@selector(stopLoadingComplete:finished:context:)];
-    self.tableView.contentInset = UIEdgeInsetsZero;
+    self.tableView.contentInset = [self defaultInsets];
     [refreshArrow layer].transform = CATransform3DMakeRotation(M_PI * 2, 0, 0, 1);
     [UIView commitAnimations];
 }
