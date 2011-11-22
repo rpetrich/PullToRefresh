@@ -32,6 +32,9 @@
 
 #define REFRESH_HEADER_HEIGHT 52.0f
 
+@interface PullRefreshTableViewController ()
+- (void)startLoadingAnimated:(BOOL)animated fromDrag:(BOOL)dragged;
+@end
 
 @implementation PullRefreshTableViewController
 
@@ -104,7 +107,7 @@
     if (!refreshSpinner)
         refreshSpinner = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
     refreshSpinner.frame = CGRectMake(floorf(floorf(REFRESH_HEADER_HEIGHT - 20) / 2), floorf((REFRESH_HEADER_HEIGHT - 20) / 2), 20, 20);
-    refreshSpinner.hidesWhenStopped = YES;
+    refreshSpinner.hidesWhenStopped = NO;
 
     [refreshHeaderView addSubview:refreshLabel];
     [refreshHeaderView addSubview:refreshArrow];
@@ -158,7 +161,7 @@
     isDragging = NO;
     if (scrollView.contentOffset.y <= -REFRESH_HEADER_HEIGHT - contentInset.top) {
         // Released above the header
-        [self startLoading];
+        [self startLoadingAnimated:YES fromDrag:YES];
         [self refresh];
     } else if (appliesAlphaTransition) {
         [UIView beginAnimations:nil context:NULL];
@@ -167,41 +170,86 @@
     }
 }
 
-- (void)startLoading {
+- (void)startLoadingAnimated:(BOOL)animated fromDrag:(BOOL)dragged {
     isLoading = YES;
 
     // Show the header
-    [UIView beginAnimations:nil context:NULL];
-    [UIView setAnimationDuration:0.3];
+    if (appliesAlphaTransition && !dragged) {
+        refreshArrow.alpha = 0.0f;
+        refreshSpinner.alpha = 1.0f;
+        refreshHeaderView.alpha = 1.0f;
+    }
+    if (animated) {
+        [UIView beginAnimations:nil context:NULL];
+        [UIView setAnimationDuration:0.3];
+    }
+    if (!appliesAlphaTransition || dragged) {
+        refreshArrow.alpha = 0.0f;
+        refreshSpinner.alpha = 1.0f;
+        refreshHeaderView.alpha = 1.0f;
+        CATransition *transition = [CATransition animation];
+        transition.duration = 0.3;
+        transition.removedOnCompletion = YES;
+        [refreshLabel.layer addAnimation:transition forKey:@"contents"];
+    }
     UIEdgeInsets insets = contentInset;
     insets.top += REFRESH_HEADER_HEIGHT;
     self.tableView.contentInset = insets;
     refreshLabel.text = self.textLoading;
-    refreshArrow.hidden = YES;
-    refreshHeaderView.alpha = 1.0f;
     [refreshSpinner startAnimating];
-    [UIView commitAnimations];
+    if (animated)
+        [UIView commitAnimations];
 }
 
-- (void)stopLoading {
+- (void)startLoadingAnimated:(BOOL)animated
+{
+    [self startLoadingAnimated:animated fromDrag:NO];
+}
+
+- (void)startLoading
+{
+    [self startLoadingAnimated:YES];
+}
+
+- (void)stopLoadingAnimated:(BOOL)animated {
     isLoading = NO;
 
     // Hide the header
-    [UIView beginAnimations:nil context:NULL];
-    [UIView setAnimationDelegate:self];
-    [UIView setAnimationDuration:0.3];
-    [UIView setAnimationDidStopSelector:@selector(stopLoadingComplete:finished:context:)];
+    if (animated) {
+        [UIView beginAnimations:nil context:NULL];
+        [UIView setAnimationDelegate:self];
+        [UIView setAnimationDuration:0.3];
+        [UIView setAnimationDidStopSelector:@selector(stopLoadingComplete:finished:context:)];
+    }
     self.tableView.contentInset = contentInset;
     [refreshArrow layer].transform = CATransform3DMakeRotation(M_PI * 2, 0, 0, 1);
     if (appliesAlphaTransition)
         refreshHeaderView.alpha = 0.0f;
-    [UIView commitAnimations];
+    if (!appliesAlphaTransition || !animated) {
+        refreshLabel.text = self.textPull;
+        refreshArrow.alpha = 1.0f;
+        refreshSpinner.alpha = 0.0f;
+        CATransition *transition = [CATransition animation];
+        transition.duration = 0.3;
+        transition.removedOnCompletion = YES;
+        [refreshLabel.layer addAnimation:transition forKey:@"contents"];
+    }
+    if (animated)
+        [UIView commitAnimations];
+    else
+        [refreshSpinner stopAnimating];
+}
+
+- (void)stopLoading
+{
+    [self stopLoadingAnimated:YES];
 }
 
 - (void)stopLoadingComplete:(NSString *)animationID finished:(NSNumber *)finished context:(void *)context {
     // Reset the header
+    refreshArrow.alpha = 1.0f;
+    refreshSpinner.alpha = 0.0f;
     refreshLabel.text = self.textPull;
-    refreshArrow.hidden = NO;
     [refreshSpinner stopAnimating];
 }
 

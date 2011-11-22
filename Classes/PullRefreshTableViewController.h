@@ -58,7 +58,9 @@
 - (void)setupStrings;
 - (void)addPullToRefreshHeader;
 - (void)startLoading;
+- (void)startLoadingAnimated:(BOOL)animated;
 - (void)stopLoading;
+- (void)stopLoadingAnimated:(BOOL)animated;
 - (void)refresh;
 
 @end
