@@ -35,7 +35,7 @@
 
 @implementation PullRefreshTableViewController
 
-@synthesize textPull, textRelease, textLoading, refreshHeaderView, refreshLabel, refreshArrow, refreshSpinner, appliesAlphaTransition;
+@synthesize textPull, textRelease, textLoading, refreshHeaderView, refreshLabel, refreshArrow, refreshSpinner, appliesAlphaTransition, loading = isLoading;
 
 - (id)initWithStyle:(UITableViewStyle)style {
   self = [super initWithStyle:style];

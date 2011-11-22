@@ -53,6 +53,7 @@
 @property (nonatomic, copy) NSString *textRelease;
 @property (nonatomic, copy) NSString *textLoading;
 @property (nonatomic, assign) BOOL appliesAlphaTransition;
+@property (nonatomic, readonly, getter=isLoading) BOOL loading;
 
 - (void)setupStrings;
 - (void)addPullToRefreshHeader;
