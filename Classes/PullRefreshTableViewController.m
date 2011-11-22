@@ -82,18 +82,23 @@
 }
 
 - (void)addPullToRefreshHeader {
-    CGRect frame = CGRectMake(0, 0 - REFRESH_HEADER_HEIGHT, 320, REFRESH_HEADER_HEIGHT);
+    UITableView *tableView = self.tableView;
+    CGFloat width = tableView.bounds.size.width;
+    
+    CGRect frame = CGRectMake(0, 0 - REFRESH_HEADER_HEIGHT, width, REFRESH_HEADER_HEIGHT);
     if (!refreshHeaderView)
         refreshHeaderView = [[UIView alloc] initWithFrame:frame];
     else
         refreshHeaderView.frame = frame;
+    refreshHeaderView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     refreshHeaderView.backgroundColor = [UIColor clearColor];
 
-    frame = CGRectMake(0, 0, 320, REFRESH_HEADER_HEIGHT);
+    frame = CGRectMake(0, 0, width, REFRESH_HEADER_HEIGHT);
     if (!refreshLabel)
         refreshLabel = [[UILabel alloc] initWithFrame:frame];
     else
         refreshLabel.frame = frame;
+    refreshLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     refreshLabel.backgroundColor = [UIColor clearColor];
     refreshLabel.font = [UIFont boldSystemFontOfSize:12.0];
     refreshLabel.textAlignment = UITextAlignmentCenter;
@@ -112,7 +117,7 @@
     [refreshHeaderView addSubview:refreshLabel];
     [refreshHeaderView addSubview:refreshArrow];
     [refreshHeaderView addSubview:refreshSpinner];
-    [self.tableView addSubview:refreshHeaderView];
+    [tableView addSubview:refreshHeaderView];
 }
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
