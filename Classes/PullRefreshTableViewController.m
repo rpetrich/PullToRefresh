@@ -35,7 +35,7 @@
 
 @implementation PullRefreshTableViewController
 
-@synthesize textPull, textRelease, textLoading, refreshHeaderView, refreshLabel, refreshArrow, refreshSpinner;
+@synthesize textPull, textRelease, textLoading, refreshHeaderView, refreshLabel, refreshArrow, refreshSpinner, appliesAlphaTransition;
 
 - (id)initWithStyle:(UITableViewStyle)style {
   self = [super initWithStyle:style];
@@ -92,6 +92,7 @@
         refreshHeaderView.frame = frame;
     refreshHeaderView.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     refreshHeaderView.backgroundColor = [UIColor clearColor];
+    refreshHeaderView.alpha = appliesAlphaTransition ? 0.0f : 1.0f;
 
     frame = CGRectMake(0, 0, width, REFRESH_HEADER_HEIGHT);
     if (!refreshLabel)
@@ -128,6 +129,7 @@
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     UIEdgeInsets insets = [self defaultInsets];
     if (isLoading) {
+        refreshHeaderView.alpha = 1.0f;
         // Update the content inset, good for section headers
         if (scrollView.contentOffset.y > 0)
             self.tableView.contentInset = [self defaultInsets];
@@ -137,16 +139,25 @@
         }
     } else if (isDragging) {
         // Update the arrow direction and label
-        [UIView beginAnimations:nil context:NULL];
-        if (scrollView.contentOffset.y < -REFRESH_HEADER_HEIGHT - insets.top) {
+        CGFloat alpha = (scrollView.contentOffset.y + insets.top) * (-1.0f / REFRESH_HEADER_HEIGHT);
+        if (alpha < 0.0f)
+            alpha = 0.0f;
+        else if (alpha > 1.0f)
+            alpha = 1.0f;
+        if (appliesAlphaTransition)
+            refreshHeaderView.alpha = alpha;
+        if (alpha >= 1.0f) {
             // User is scrolling above the header
+            [UIView beginAnimations:nil context:NULL];
             refreshLabel.text = self.textRelease;
             [refreshArrow layer].transform = CATransform3DMakeRotation(M_PI, 0, 0, 1);
+            [UIView commitAnimations];
         } else { // User is scrolling somewhere within the header
+            [UIView beginAnimations:nil context:NULL];
             refreshLabel.text = self.textPull;
             [refreshArrow layer].transform = CATransform3DMakeRotation(M_PI * 2, 0, 0, 1);
+            [UIView commitAnimations];
         }
-        [UIView commitAnimations];
     }
 }
 
@@ -157,6 +168,10 @@
         // Released above the header
         [self startLoading];
         [self refresh];
+    } else if (appliesAlphaTransition) {
+        [UIView beginAnimations:nil context:NULL];
+        refreshHeaderView.alpha = 0.0f;
+        [UIView commitAnimations];
     }
 }
 
@@ -171,6 +186,7 @@
     self.tableView.contentInset = insets;
     refreshLabel.text = self.textLoading;
     refreshArrow.hidden = YES;
+    refreshHeaderView.alpha = 1.0f;
     [refreshSpinner startAnimating];
     [UIView commitAnimations];
 }
@@ -185,6 +201,8 @@
     [UIView setAnimationDidStopSelector:@selector(stopLoadingComplete:finished:context:)];
     self.tableView.contentInset = [self defaultInsets];
     [refreshArrow layer].transform = CATransform3DMakeRotation(M_PI * 2, 0, 0, 1);
+    if (appliesAlphaTransition)
+        refreshHeaderView.alpha = 0.0f;
     [UIView commitAnimations];
 }
 

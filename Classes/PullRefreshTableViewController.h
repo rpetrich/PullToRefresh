@@ -42,6 +42,7 @@
     NSString *textLoading;
     BOOL hasLoadedDefaultInsets;
     UIEdgeInsets defaultInsets;
+    BOOL appliesAlphaTransition;
 }
 
 @property (nonatomic, retain) UIView *refreshHeaderView;
@@ -51,6 +52,7 @@
 @property (nonatomic, copy) NSString *textPull;
 @property (nonatomic, copy) NSString *textRelease;
 @property (nonatomic, copy) NSString *textLoading;
+@property (nonatomic, assign) BOOL appliesAlphaTransition;
 
 - (void)setupStrings;
 - (void)addPullToRefreshHeader;
