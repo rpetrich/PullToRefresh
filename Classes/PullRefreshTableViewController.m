@@ -35,7 +35,7 @@
 
 @implementation PullRefreshTableViewController
 
-@synthesize textPull, textRelease, textLoading, refreshHeaderView, refreshLabel, refreshArrow, refreshSpinner, appliesAlphaTransition, loading = isLoading;
+@synthesize textPull, textRelease, textLoading, refreshHeaderView, refreshLabel, refreshArrow, refreshSpinner, appliesAlphaTransition, loading = isLoading, contentInset;
 
 - (id)initWithStyle:(UITableViewStyle)style {
   self = [super initWithStyle:style];
@@ -70,15 +70,6 @@
   textPull = [[NSString alloc] initWithString:@"Pull down to refresh..."];
   textRelease = [[NSString alloc] initWithString:@"Release to refresh..."];
   textLoading = [[NSString alloc] initWithString:@"Loading..."];
-}
-
-- (UIEdgeInsets)defaultInsets
-{
-    if (!hasLoadedDefaultInsets) {
-        hasLoadedDefaultInsets = YES;
-        defaultInsets = self.tableView.contentInset;
-    }
-    return defaultInsets;
 }
 
 - (void)addPullToRefreshHeader {
@@ -119,6 +110,7 @@
     [refreshHeaderView addSubview:refreshArrow];
     [refreshHeaderView addSubview:refreshSpinner];
     [tableView addSubview:refreshHeaderView];
+    tableView.contentInset = contentInset;
 }
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
@@ -127,15 +119,15 @@
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-    UIEdgeInsets insets = [self defaultInsets];
+    UIEdgeInsets insets = contentInset;
     if (isLoading) {
         refreshHeaderView.alpha = 1.0f;
         // Update the content inset, good for section headers
         if (scrollView.contentOffset.y > 0)
-            self.tableView.contentInset = [self defaultInsets];
-        else if (scrollView.contentOffset.y >= [self defaultInsets].top - REFRESH_HEADER_HEIGHT) {
+            self.tableView.contentInset = insets;
+        else if (scrollView.contentOffset.y >= insets.top - REFRESH_HEADER_HEIGHT) {
             insets.top -= scrollView.contentOffset.y;
-            self.tableView.contentInset = defaultInsets;
+            self.tableView.contentInset = insets;
         }
     } else if (isDragging) {
         // Update the arrow direction and label
@@ -164,7 +156,7 @@
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
     if (isLoading) return;
     isDragging = NO;
-    if (scrollView.contentOffset.y <= -REFRESH_HEADER_HEIGHT - [self defaultInsets].top) {
+    if (scrollView.contentOffset.y <= -REFRESH_HEADER_HEIGHT - contentInset.top) {
         // Released above the header
         [self startLoading];
         [self refresh];
@@ -181,7 +173,7 @@
     // Show the header
     [UIView beginAnimations:nil context:NULL];
     [UIView setAnimationDuration:0.3];
-    UIEdgeInsets insets = [self defaultInsets];
+    UIEdgeInsets insets = contentInset;
     insets.top += REFRESH_HEADER_HEIGHT;
     self.tableView.contentInset = insets;
     refreshLabel.text = self.textLoading;
@@ -199,7 +191,7 @@
     [UIView setAnimationDelegate:self];
     [UIView setAnimationDuration:0.3];
     [UIView setAnimationDidStopSelector:@selector(stopLoadingComplete:finished:context:)];
-    self.tableView.contentInset = [self defaultInsets];
+    self.tableView.contentInset = contentInset;
     [refreshArrow layer].transform = CATransform3DMakeRotation(M_PI * 2, 0, 0, 1);
     if (appliesAlphaTransition)
         refreshHeaderView.alpha = 0.0f;
