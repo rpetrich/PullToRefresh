@@ -63,4 +63,7 @@
 - (void)stopLoadingAnimated:(BOOL)animated;
 - (void)refresh;
 
+- (void)startedLoading;
+- (void)stoppedLoading;
+
 @end

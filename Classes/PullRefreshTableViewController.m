@@ -171,6 +171,8 @@
 }
 
 - (void)startLoadingAnimated:(BOOL)animated fromDrag:(BOOL)dragged {
+    if (isLoading)
+        return;
     isLoading = YES;
 
     // Show the header
@@ -197,6 +199,7 @@
     self.tableView.contentInset = insets;
     refreshLabel.text = self.textLoading;
     [refreshSpinner startAnimating];
+    [self startedLoading];
     if (animated)
         [UIView commitAnimations];
 }
@@ -212,6 +215,8 @@
 }
 
 - (void)stopLoadingAnimated:(BOOL)animated {
+    if (!isLoading)
+        return;
     isLoading = NO;
 
     // Hide the header
@@ -234,6 +239,7 @@
         transition.removedOnCompletion = YES;
         [refreshLabel.layer addAnimation:transition forKey:@"contents"];
     }
+    [self stoppedLoading];
     if (animated)
         [UIView commitAnimations];
     else
@@ -257,6 +263,14 @@
     // This is just a demo. Override this method with your custom reload action.
     // Don't forget to call stopLoading at the end.
     [self performSelector:@selector(stopLoading) withObject:nil afterDelay:2.0];
+}
+
+- (void)startedLoading
+{
+}
+
+- (void)stoppedLoading
+{
 }
 
 - (void)dealloc {
