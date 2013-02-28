@@ -32,6 +32,12 @@
 
 #define REFRESH_HEADER_HEIGHT 52.0f
 
+#ifndef kCFCoreFoundationVersionNumber_iOS_5_1
+#define kCFCoreFoundationVersionNumber_iOS_5_1 690.10
+#endif
+
+#define USING_SYSTEM_REFRESH_CONTROL (kCFCoreFoundationVersionNumber > kCFCoreFoundationVersionNumber_iOS_5_1)
+
 @interface PullRefreshTableViewController ()
 - (void)startLoadingAnimated:(BOOL)animated fromDrag:(BOOL)dragged;
 @end
@@ -76,6 +82,16 @@
 }
 
 - (void)addPullToRefreshHeader {
+#ifdef __IPHONE_6_0
+    if (USING_SYSTEM_REFRESH_CONTROL) {
+        UIRefreshControl *refreshControl = [[UIRefreshControl alloc] init];
+        [refreshControl addTarget:self action:@selector(refresh) forControlEvents:UIControlEventValueChanged];
+        self.refreshControl = refreshControl;
+        [refreshControl release];
+        return;
+    }
+#endif
+
     UITableView *tableView = self.tableView;
     CGFloat width = tableView.bounds.size.width;
     
@@ -122,6 +138,10 @@
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+#ifdef __IPHONE_6_0
+    if (USING_SYSTEM_REFRESH_CONTROL)
+        return;
+#endif
     UIEdgeInsets insets = contentInset;
     if (isLoading) {
         refreshHeaderView.alpha = 1.0f;
@@ -157,6 +177,10 @@
 }
 
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate {
+#ifdef __IPHONE_6_0
+    if (USING_SYSTEM_REFRESH_CONTROL)
+        return;
+#endif
     if (isLoading) return;
     isDragging = NO;
     if (scrollView.contentOffset.y <= -REFRESH_HEADER_HEIGHT - contentInset.top) {
@@ -171,6 +195,12 @@
 }
 
 - (void)startLoadingAnimated:(BOOL)animated fromDrag:(BOOL)dragged {
+#ifdef __IPHONE_6_0
+    if (USING_SYSTEM_REFRESH_CONTROL) {
+        [self.refreshControl beginRefreshing];
+        return;
+    }
+#endif
     if (isLoading)
         return;
     isLoading = YES;
@@ -215,6 +245,12 @@
 }
 
 - (void)stopLoadingAnimated:(BOOL)animated {
+#ifdef __IPHONE_6_0
+    if (USING_SYSTEM_REFRESH_CONTROL) {
+        [self.refreshControl endRefreshing];
+        return;
+    }
+#endif
     if (!isLoading)
         return;
     isLoading = NO;
