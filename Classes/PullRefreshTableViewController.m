@@ -30,6 +30,10 @@
 #import <QuartzCore/QuartzCore.h>
 #import "PullRefreshTableViewController.h"
 
+#ifndef __IPHONE_6_0
+#define NSTextAlignmentCenter UITextAlignmentCenter
+#endif
+
 #define REFRESH_HEADER_HEIGHT 52.0f
 
 #ifndef kCFCoreFoundationVersionNumber_iOS_5_1
@@ -112,7 +116,7 @@
     refreshLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     refreshLabel.backgroundColor = [UIColor clearColor];
     refreshLabel.font = [UIFont boldSystemFontOfSize:12.0];
-    refreshLabel.textAlignment = UITextAlignmentCenter;
+    refreshLabel.textAlignment = NSTextAlignmentCenter;
 
     if (!refreshArrow)
         refreshArrow = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"arrow.png"]];
